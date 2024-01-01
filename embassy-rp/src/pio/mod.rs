@@ -281,6 +281,23 @@ impl<'l, PIO: Instance> Pin<'l, PIO> {
     pub fn pin(&self) -> u8 {
         self.pin._pin()
     }
+
+    
+    /// Reborrow into a "child" Pin.
+    ///
+    /// `self` will stay borrowed until the child Pin is dropped.
+    #[inline]
+    pub fn reborrow(&mut self) -> Pin<'_, PIO> {
+        // This works ok:
+        // * Just like in PeripheralRef, borrowing self as mut means that the user can only have
+        //   one access point at a time
+        // * This type does not modify it's internal state, nor does it implement
+        //   Drop. This means that creating a value-wise copy a-la PeripheralRef is fine and will
+        //   not result in an issue where the user modifies the child pin and not have that
+        //   propagate upward. Furthermore it means the child Pin will not have any issue with
+        //   duplicate cleanup. 
+        Pin { pin: self.pin.reborrow(), pio: PhantomData }
+    }
 }
 
 /// Type representing a state machine RX FIFO.

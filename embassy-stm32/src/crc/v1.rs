@@ -49,4 +49,16 @@ impl<'d> Crc<'d> {
     pub fn read(&self) -> u32 {
         PAC_CRC.dr().read()
     }
+
+    /// Reborrow into a "child" CRC driver
+    ///
+    /// `self` will stay borrowed until the child CRC driver is dropped.
+    #[inline]
+    pub fn reborrow(&mut self) -> Crc<'_> {
+        // This is OK because there is no modification of internal typestate. So the copying over
+        // is fine. And there's no Drop impl, so there's no risk of some kind of duplicate cleanup.
+        Crc {
+            _peri: self._peri.reborrow(),
+        }
+    }
 }
